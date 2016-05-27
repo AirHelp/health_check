@@ -45,7 +45,9 @@ module HealthCheck
 
 end
 
-require "health_check/version"
+require 'health_check/version'
+require 'health_check/base_health_check'
+require 'health_check/resque_health_check'
 require 'health_check/custom_health_checks'
 require 'health_check/utils'
 require 'health_check/health_check_controller'
