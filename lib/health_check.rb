@@ -25,14 +25,14 @@ module HealthCheck
 
   # s3 buckets
   mattr_accessor :buckets
-  self.buckets = []
+  self.buckets = {}
 
   # Array of custom check blocks
   mattr_accessor :custom_checks
   mattr_accessor :full_checks
   mattr_accessor :standard_checks
   self.custom_checks = [ ]
-  self.full_checks = ['database', 'migrations', 'custom', 'email', 'cache', 'redis', 'sidekiq_redis', 's3']
+  self.full_checks = ['database', 'migrations', 'custom', 'email', 'cache', 'redis', 'sidekiq-redis', 'resque-redis', 's3']
   self.standard_checks = [ 'database', 'migrations', 'custom', 'emailconf' ]
 
   def self.add_custom_check(&block)
@@ -48,7 +48,9 @@ end
 require 'health_check/version'
 require 'health_check/base_health_check'
 require 'health_check/resque_health_check'
-require 'health_check/custom_health_checks'
+require 'health_check/s3_health_check'
+require 'health_check/redis_health_check'
+require 'health_check/sidekiq_health_check'
 require 'health_check/utils'
 require 'health_check/health_check_controller'
 require 'health_check/health_check_routes'
