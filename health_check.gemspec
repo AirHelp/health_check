@@ -25,7 +25,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency(%q<aws-sdk>, [">= 2"])
   gem.add_dependency(%q<sidekiq>, [">= 4"])
   gem.add_dependency(%q<redis>, [">= 3"])
-  gem.add_runtime_dependency(%q<resque>, [">= 1"])
+  gem.add_dependency(%q<resque>, [">= 1"])
   gem.add_development_dependency(%q<rake>, [">= 0.8.3"])
   gem.add_development_dependency(%q<shoulda>, ["~> 2.11.0"])
   gem.add_development_dependency(%q<bundler>, ["~> 1.2"])
