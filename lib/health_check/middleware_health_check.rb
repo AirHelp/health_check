@@ -6,11 +6,10 @@ module HealthCheck
     end
 
     def call(env)
-      health_check_uri = HealthCheck.uri
       uri = env['PATH_INFO'.freeze]
-      if uri.include? health_check_uri
-        response_method = uri.sub! '/' + health_check_uri + '.' , ''
-        response_method = 'response_' + response_method.to_s
+      if uri.include? HealthCheck.uri
+        response_type = uri.sub! '/' + HealthCheck.uri + '.' , ''
+        response_method = 'response_' + response_type.to_s
         checks = 'standard'
         begin
           errors = HealthCheck::Utils.process_checks(checks)
