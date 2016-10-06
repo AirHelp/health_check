@@ -1,14 +1,16 @@
 module HealthCheck
   class MiddlewareHealthcheck
 
+    URI_SUFFIX_REGEX = /\..*$/
+
     def initialize(app)
       @app = app
     end
 
     def call(env)
       uri = env['PATH_INFO']
-      uriWithoutSuffix = uri[/([^\.]*)/,1]
-      if uriWithoutSuffix == HealthCheck.uri
+      uri_without_suffix = uri.gsub URI_SUFFIX_REGEX, ''
+      if uri_without_suffix == HealthCheck.uri
         response_type = uri[/\.(json|xml)/,1] || 'plain'
         response_method = 'response_' + response_type
         checks = env['QUERY_STRING'][/checks=([a-z0-9\-_]*)/,1] || 'standard'
