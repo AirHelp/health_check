@@ -7,7 +7,8 @@ module HealthCheck
 
     def call(env)
       uri = env['PATH_INFO']
-      if uri[/([^\.]*)/,1] == HealthCheck.uri
+      uriWithoutSuffix = uri[/([^\.]*)/,1]
+      if uriWithoutSuffix == HealthCheck.uri
         response_type = uri[/\.(json|xml)/,1] || 'plain'
         response_method = 'response_' + response_type
         checks = env['QUERY_STRING'][/checks=([a-z0-9\-_]*)/,1] || 'standard'
