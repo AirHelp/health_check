@@ -8,14 +8,14 @@ module HealthCheck
     def call(env)
       uri = env['PATH_INFO']
       if uri =~ /^\/?#{HealthCheck.uri}\/?([-_0-9a-zA-Z]*)(\.(\w*))?/
-       checks = $1
-       checks = 'standard' if checks == ''
-       response_type = $3
-       begin
-         errors = HealthCheck::Utils.process_checks(checks)
-       rescue => e
-         errors = e.message.blank? ? e.class.to_s : e.message.to_s
-       end
+        checks = $1
+        checks = 'standard' if checks == ''
+        response_type = $3
+        begin
+          errors = HealthCheck::Utils.process_checks(checks)
+        rescue => e
+          errors = e.message.blank? ? e.class.to_s : e.message.to_s
+        end
         healthy = errors.blank?
         msg = healthy ? HealthCheck.success : "health_check failed: #{errors}"
         if response_type == 'xml'
