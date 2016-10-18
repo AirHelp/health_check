@@ -10,7 +10,7 @@ module HealthCheck
       if uri =~ /^\/?#{HealthCheck.uri}\/?([-_0-9a-zA-Z]*)(\.(\w*))?/
         checks = $1
         checks = 'standard' if checks == ''
-        response_type = $3
+        response_type = $3 || 'plain'
         begin
           errors = HealthCheck::Utils.process_checks(checks)
         rescue => e
@@ -24,7 +24,7 @@ module HealthCheck
         elsif response_type == 'json'
           content_type = 'application/json'
           msg = { healthy: healthy, message: msg }.to_json
-        else
+        elsif response_type == 'plain'
           content_type = 'text/plain'
         end
         [ (healthy ? 200 : 500), { 'Content-Type' => content_type }, [msg] ]
