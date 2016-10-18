@@ -8,8 +8,7 @@ module HealthCheck
     def call(env)
       uri = env['PATH_INFO']
       if uri =~ /^\/?#{HealthCheck.uri}\/?([-_0-9a-zA-Z]*)(\.(\w*))?/
-        checks = $1
-        checks = 'standard' if checks == ''
+        checks = $1.empty? ? 'standard' : $1
         response_type = $3 || 'plain'
         begin
           errors = HealthCheck::Utils.process_checks(checks)
