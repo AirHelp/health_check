@@ -32,9 +32,13 @@ module HealthCheck
   mattr_accessor :buckets
   self.buckets = {}
 
+  # health check url for controller check
+  mattr_accessor :url
+  self.url = 'health_check'
+
   # health check uri path for middleware check
-  mattr_accessor :uri
-  self.uri = 'health_check'
+  mattr_accessor :uri_middleware
+  self.uri_middleware = 'health_check_middleware'
 
   # Basic Authentication
   mattr_accessor :basic_auth_username, :basic_auth_password
