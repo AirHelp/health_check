@@ -7,9 +7,10 @@ module HealthCheck
 
     def call(env)
       uri = env['PATH_INFO']
-      if uri =~ /^\/?#{HealthCheck.uri}\/?([-_0-9a-zA-Z]*)(\.(\w*))?/
-        checks = $1.empty? ? 'standard' : $1
-        response_type = $3 || 'plain'
+      if uri =~ /^\/?#{HealthCheck.uri_middleware}(\/([-_0-9a-zA-Z]*))?(\.(\w*))?$/
+        checks = $2 || 'standard'
+        response_type = $4 || 'plain'
+        puts checks
         begin
           errors = HealthCheck::Utils.process_checks(checks)
         rescue => e
