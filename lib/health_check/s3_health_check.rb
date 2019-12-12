@@ -14,10 +14,10 @@ module HealthCheck
           end
           permissions.each do |permision|
             begin
-            send(permision, bucket_name)
-          rescue Exception => e
-            raise "bucket:#{bucket_name}, permission:#{permision} - #{e.message}"
-          end
+              send(permision, bucket_name)
+            rescue Exception => e
+              raise "bucket:#{bucket_name}, permission:#{permision} - #{e.message}"
+            end
           end
         end
         ''
@@ -47,7 +47,7 @@ module HealthCheck
       end
 
       def R(bucket)
-        aws_s3_client.list_objects(bucket: bucket)
+        aws_s3_client.list_objects(bucket: bucket, max_keys: 1)
       end
 
       def W(bucket)
