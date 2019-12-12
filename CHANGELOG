@@ -1,5 +1,6 @@
 = Change Log =
-
+* 2.4.1
+ * Speed up the S3 read permission check by decreasing the max_keys limit from 1'000 to 1.
 * 2.4.0
  * Added tests for middleware
  * Changed contributed middleware code to conform to existing url scheme
@@ -44,6 +45,6 @@
 	- reduced tests to the versions of ruby recomended for the different versions of rails
 * 1.1.2 - Change to bundler support for building gems, as jeweler gem was broken by v2.0.0 of rubygems
 * 1.1.0 - Include cache check (Thanks to https://github.com/mgomes1 ) and some changes to test setup to workaround and diagnose test failures under rvm
-* 1.0.2 - Included travis config and gemfiles used in travis tests in gem and changes to test setup so that gem test 
+* 1.0.2 - Included travis config and gemfiles used in travis tests in gem and changes to test setup so that gem test
 * 1.x - Includes Rails 3.x suppprt as an Engine
 * 0.x - Rails 2.3
