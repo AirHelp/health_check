@@ -52,13 +52,21 @@ module HealthCheck
 
       def W(bucket)
         aws_s3_client.put_object(bucket: bucket,
-                                 key: "healthcheck_#{Rails.application.class.parent_name}",
+                                 key: "healthcheck_#{module_parent_name}",
                                  body: Time.new.to_s)
       end
 
       def D(bucket)
         aws_s3_client.delete_object(bucket: bucket,
-                                    key: "healthcheck_#{Rails.application.class.parent_name}")
+                                    key: "healthcheck_#{module_parent_name}")
+      end
+
+      def module_parent_name
+        if Rails::VERSION::MAJOR >= 6
+          Rails.application.class.module_parent_name
+        else
+          Rails.application.class.parent_name
+        end
       end
     end
   end
