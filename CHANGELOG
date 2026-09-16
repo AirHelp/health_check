@@ -1,4 +1,106 @@
 = Change Log =
+
+* 3.0.0 - AirHelp fork (major, breaking)
+
+  Major bump on the AirHelp fork lineage. The previous head of this fork was
+  2.4.2; the breaking behavioural change described below moves us to 3.0.0.
+  The number reflects fork lineage — it is unrelated to upstream Purple-Devs
+  release numbering (which reached its own 3.0.0 on a different codebase and
+  has been unmaintained since April 2023).
+
+
+  The 'migration' check is rewritten and its old, silently-degrading behaviour
+  is removed. This is a breaking change on purpose.
+
+  What was wrong
+
+    The previous implementation asked ActiveRecord whether the running app
+    still had any migrations left to apply, using ActiveRecord::Migration
+    .check_pending!. If ActiveRecord did not respond to that method, the gem
+    silently switched to a very different behaviour: it compared the highest
+    migration timestamp found on disk (the app's own db/migrate directory)
+    to the highest version recorded in the schema_migrations table, and
+    reported the pod as unhealthy whenever the two numbers did not match.
+
+    That fallback answers a different question. It complains not only when
+    the app is behind the database, but also when the database is ahead of
+    the app. In a rolling deployment on Kubernetes those two situations are
+    fundamentally different:
+
+      * "App ahead of DB" means the new code was rolled out without its
+        migrations having been applied. That is a real problem: the app
+        expects columns or tables that do not exist yet, and requests will
+        genuinely fail.
+
+      * "DB ahead of app" is the normal, expected state that every
+        old pod finds itself in during a rolling deployment. The moment the
+        migration Job or init container of the new release finishes, every
+        still-running old pod sees a database that already contains the new
+        migration's version stamp - even though the old pod's image, and
+        therefore its bundled migration files, obviously does not include
+        that file. Those pods can continue to serve traffic correctly:
+        their expected schema is still present, additional columns or
+        removed indexes do not break their queries. They just happen to be
+        temporarily "behind" the database until they are drained.
+
+    Under Rails 7.1 the check_pending! entry point was deprecated in favour
+    of check_all_pending!. Under Rails 7.2 check_pending! was removed
+    entirely. On those versions the gem quietly fell into the fallback
+    branch, meaning every release that included a database migration
+    caused every old pod to fail its health check the moment the migration
+    Job wrote to schema_migrations - even though nothing had gone wrong
+    with those pods. Whether that translated into an outage depended on
+    how sensitive readiness probes, load balancers and paging thresholds
+    were: some deployments absorbed the flap, others tipped over.
+
+  What this version does
+
+    The migration check now uses ActiveRecord::Migration.check_all_pending!
+    when available (Rails 7.1 and above), which correctly answers only the
+    "app ahead of DB" question and treats "DB ahead of app" as healthy,
+    which is what a rolling deployment needs.
+
+    For Rails 4.0 through 7.0 the check falls back to the legacy
+    check_pending! entry point, which has the same directional semantic.
+
+    If neither entry point is available - which in practice means the app
+    has removed or replaced ActiveRecord, or is on an unsupported ancient
+    Rails - the check now raises HealthCheck::UnsupportedActiveRecordError
+    instead of silently reverting to the old bidirectional comparison.
+    The endpoint therefore fails loudly and explicitly, so a misconfigured
+    or unsupported environment cannot masquerade as healthy.
+
+  Breaking changes
+
+    * The filename-vs-schema_migrations comparison is removed entirely.
+      Applications that were relying on it - typically because they were
+      running on pre-Rails-4 or had removed ActiveRecord - will now see
+      the endpoint raise HealthCheck::UnsupportedActiveRecordError instead
+      of the old "Current database version (...) does not match latest
+      migration (...)" message.
+
+    * A new HealthCheck::UnsupportedActiveRecordError exception is
+      introduced. It is raised by the migration check when no supported
+      entry point is exposed by ActiveRecord::Migration. Callers that
+      wrap the check manually may want to rescue it.
+
+    * The migration branch of HealthCheck::Utils.process_checks now
+      delegates to HealthCheck::Utils.check_migrations, a new public
+      class method that can be called directly and unit-tested in
+      isolation. Its return contract is: nil on success, the pending
+      migration error message on a legitimate "app ahead of DB" failure,
+      raises HealthCheck::UnsupportedActiveRecordError otherwise.
+
+  Tests
+
+    Unit tests for HealthCheck::Utils.check_migrations are added under
+    test/unit/. They cover: preferring check_all_pending! when both are
+    available, falling back to check_pending! when only it is available,
+    surfacing PendingMigrationError messages verbatim from either entry
+    point, raising when neither entry point is exposed, and raising when
+    ActiveRecord::Migration is not defined at all. A new rake task
+    'test:unit' runs them stand-alone (no full Rails-plugin harness).
+
 * 2.4.1
  * Speed up the S3 read permission check by decreasing the max_keys limit from 1'000 to 1.
 * 2.4.0

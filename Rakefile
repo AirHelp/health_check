@@ -2,12 +2,25 @@ require "bundler/gem_tasks"
 
 #require 'rubygems'
 require 'rake'
+require 'rake/testtask'
+
+# Stand-alone unit tests for pure-Ruby logic that does not require a full Rails
+# plugin harness. Runs regardless of whether the gem is being tested in plugin
+# mode or gem mode below.
+namespace :test do
+  Rake::TestTask.new(:unit) do |t|
+    t.libs << 'lib'
+    t.libs << 'test'
+    t.test_files = FileList['test/unit/utils_migration_check_test.rb']
+    t.verbose = true
+  end
+end
 
 # Tests are conducted with health_test as a plugin
 environment_file = File.join(File.dirname(__FILE__), '..', '..', '..', 'config', 'environment.rb')
 plugin_dir = File.join(File.dirname(__FILE__), '..', 'plugins')
 
-if File.exists?(environment_file) and File.directory?(plugin_dir)
+if File.exist?(environment_file) and File.directory?(plugin_dir)
   # test as plugin
   
   require 'rake/testtask'

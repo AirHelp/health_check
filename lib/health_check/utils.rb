@@ -30,20 +30,7 @@ module HealthCheck
           when "emailconf"
             errors << HealthCheck::Utils.check_email if HealthCheck::Utils.mailer_configured?
           when "migrations", "migration"
-            if defined?(ActiveRecord::Migration) and ActiveRecord::Migration.respond_to?(:check_pending!)
-              # Rails 4+
-              begin
-                ActiveRecord::Migration.check_pending!
-              rescue ActiveRecord::PendingMigrationError => ex
-                  errors << ex.message
-              end
-            else
-              database_version  = HealthCheck::Utils.get_database_version
-              migration_version = HealthCheck::Utils.get_migration_version
-              if database_version.to_i != migration_version.to_i
-                errors << "Current database version (#{database_version}) does not match latest migration (#{migration_version}). "
-              end
-            end
+            errors << HealthCheck::Utils.check_migrations.to_s
           when 'cache'
             errors << HealthCheck::Utils.check_cache
           when 'resque-redis-if-present'
@@ -94,6 +81,36 @@ module HealthCheck
 
     def self.get_database_version
       ActiveRecord::Migrator.current_version if defined?(ActiveRecord)
+    end
+
+    # Runs the "pending migrations" verification against the appropriate
+    # ActiveRecord API. Returns nil when the check passes, the failure message
+    # when there are pending migrations, and raises
+    # HealthCheck::UnsupportedActiveRecordError when the current ActiveRecord
+    # version exposes neither of the supported entry points.
+    def self.check_migrations
+      unless defined?(ActiveRecord::Migration)
+        raise HealthCheck::UnsupportedActiveRecordError,
+              "ActiveRecord::Migration is not defined; the 'migration' health check requires ActiveRecord."
+      end
+
+      begin
+        if ActiveRecord::Migration.respond_to?(:check_all_pending!)
+          # Rails 7.1+
+          ActiveRecord::Migration.check_all_pending!
+          nil
+        elsif ActiveRecord::Migration.respond_to?(:check_pending!)
+          # Rails 4.0 – 7.0
+          ActiveRecord::Migration.check_pending!
+          nil
+        else
+          raise HealthCheck::UnsupportedActiveRecordError,
+                "ActiveRecord::Migration responds to neither check_all_pending! (Rails 7.1+) " \
+                "nor check_pending! (Rails 4.0-7.0). The 'migration' health check cannot run on this version."
+        end
+      rescue ActiveRecord::PendingMigrationError => e
+        e.message
+      end
     end
 
     def self.get_migration_version(dir = self.db_migrate_path)
