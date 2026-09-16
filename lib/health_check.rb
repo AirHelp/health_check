@@ -3,6 +3,12 @@
 
 module HealthCheck
 
+  # Raised by the 'migration' check when the ActiveRecord/Rails version does not
+  # expose an API this gem knows how to interrogate. Emitted rather than silently
+  # skipping the check so that a misconfigured environment cannot masquerade as
+  # healthy.
+  UnsupportedActiveRecordError = Class.new(StandardError)
+
   class Engine < ::Rails::Engine
     cattr_accessor :routes_explicitly_defined
   end

@@ -1,3 +1,3 @@
 module HealthCheck
-  VERSION = "3.1.0"
+  VERSION = "4.0.0.ah1"
 end

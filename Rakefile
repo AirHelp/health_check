@@ -2,10 +2,20 @@ require "bundler/gem_tasks"
 
 #require 'rubygems'
 require 'rake'
+require 'rake/testtask'
 
 #tests as gem
 task :test do
   exec '/bin/bash', './test/test_with_railsapp'
+end
+
+namespace :test do
+  Rake::TestTask.new(:unit) do |t|
+    t.libs << 'lib'
+    t.libs << 'test'
+    t.test_files = FileList['test/unit/**/*_test.rb']
+    t.verbose = true
+  end
 end
 
 task default: :test
